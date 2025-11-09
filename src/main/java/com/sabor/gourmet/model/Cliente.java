@@ -14,11 +14,31 @@ public class Cliente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String nombre;
+    @Column(nullable = false, unique = true, length = 8)
+    private String dni;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, length = 100)
+    private String nombres;
+
+    @Column(nullable = false, length = 100)
+    private String apellidos;
+
+    @Column(length = 15)
+    private String telefono;
+
+    @Column(unique = true, length = 100)
     private String correo;
 
-    private String telefono;
+    @Column(nullable = false, length = 20)
+    private String estado = "activo"; // activo, inactivo
+
+    // Constructor personalizado sin id para facilitar la creación
+    public Cliente(String dni, String nombres, String apellidos, String telefono, String correo, String estado) {
+        this.dni = dni;
+        this.nombres = nombres;
+        this.apellidos = apellidos;
+        this.telefono = telefono;
+        this.correo = correo;
+        this.estado = estado;
+    }
 }

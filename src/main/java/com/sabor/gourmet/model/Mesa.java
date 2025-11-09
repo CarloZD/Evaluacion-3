@@ -14,11 +14,19 @@ public class Mesa {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private int numero;
+    @Column(nullable = false, unique = true)
+    private String numero;
 
     @Column(nullable = false)
-    private int capacidad;
+    private Integer capacidad;
 
-    private boolean disponible = true;
+    @Column(nullable = false, length = 20)
+    private String estado = "disponible"; // disponible, ocupada, reservada, mantenimiento
+
+    // Constructor personalizado sin id para facilitar la creación
+    public Mesa(String numero, Integer capacidad, String estado) {
+        this.numero = numero;
+        this.capacidad = capacidad;
+        this.estado = estado;
+    }
 }
