@@ -2,6 +2,7 @@ package com.sabor.gourmet.controller;
 
 import com.sabor.gourmet.model.Cliente;
 import com.sabor.gourmet.repository.ClienteRepository;
+import com.sabor.gourmet.services.AuditoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +18,9 @@ public class ClienteController {
     @Autowired
     private ClienteRepository clienteRepository;
 
+    @Autowired
+    private AuditoriaService auditoriaService;
+
     @GetMapping
     public String listarClientes(
             @RequestParam(required = false) String busqueda,
@@ -29,10 +33,14 @@ public class ClienteController {
         if (busqueda != null && !busqueda.trim().isEmpty()) {
             clientes = clienteRepository.findByNombresContainingIgnoreCaseOrApellidosContainingIgnoreCase(
                     busqueda, busqueda);
+            // Registrar búsqueda
+            auditoriaService.registrarBuscar("CLIENTE", busqueda, clientes.size());
         } else if (estado != null && !estado.isEmpty()) {
             clientes = clienteRepository.findByEstado(estado);
+            auditoriaService.registrarListar("CLIENTE", clientes.size());
         } else {
             clientes = clienteRepository.findAll();
+            auditoriaService.registrarListar("CLIENTE", clientes.size());
         }
 
         model.addAttribute("clientes", clientes);
@@ -62,8 +70,10 @@ public class ClienteController {
     @PostMapping("/guardar")
     public String guardarCliente(@ModelAttribute Cliente cliente, RedirectAttributes redirectAttributes) {
         try {
+            boolean esNuevo = (cliente.getId() == null);
+
             // Validar DNI único (excepto al editar el mismo cliente)
-            if (cliente.getId() == null) {
+            if (esNuevo) {
                 if (clienteRepository.findByDni(cliente.getDni()).isPresent()) {
                     redirectAttributes.addFlashAttribute("mensaje", "Ya existe un cliente con ese DNI");
                     redirectAttributes.addFlashAttribute("tipoMensaje", "warning");
@@ -76,10 +86,18 @@ public class ClienteController {
                 cliente.setEstado("activo");
             }
 
-            clienteRepository.save(cliente);
+            Cliente clienteGuardado = clienteRepository.save(cliente);
 
-            redirectAttributes.addFlashAttribute("mensaje",
-                    cliente.getId() == null ? "Cliente registrado exitosamente" : "Cliente actualizado exitosamente");
+            // Registrar en auditoría
+            String nombreCompleto = clienteGuardado.getNombres() + " " + clienteGuardado.getApellidos();
+            if (esNuevo) {
+                auditoriaService.registrarCrear("CLIENTE", clienteGuardado.getId(), nombreCompleto);
+                redirectAttributes.addFlashAttribute("mensaje", "Cliente registrado exitosamente");
+            } else {
+                auditoriaService.registrarEditar("CLIENTE", clienteGuardado.getId(), nombreCompleto);
+                redirectAttributes.addFlashAttribute("mensaje", "Cliente actualizado exitosamente");
+            }
+
             redirectAttributes.addFlashAttribute("tipoMensaje", "success");
 
         } catch (Exception e) {
@@ -126,10 +144,15 @@ public class ClienteController {
             Cliente cliente = clienteRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado: " + id));
 
+            String nombreCompleto = cliente.getNombres() + " " + cliente.getApellidos();
+
             clienteRepository.deleteById(id);
 
+            // Registrar en auditoría
+            auditoriaService.registrarEliminar("CLIENTE", id, nombreCompleto);
+
             redirectAttributes.addFlashAttribute("mensaje",
-                    "Cliente '" + cliente.getNombres() + " " + cliente.getApellidos() + "' eliminado exitosamente");
+                    "Cliente '" + nombreCompleto + "' eliminado exitosamente");
             redirectAttributes.addFlashAttribute("tipoMensaje", "success");
 
         } catch (Exception e) {
@@ -146,9 +169,15 @@ public class ClienteController {
             Cliente cliente = clienteRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado: " + id));
 
+            String estadoAnterior = cliente.getEstado();
             String nuevoEstado = cliente.getEstado().equals("activo") ? "inactivo" : "activo";
             cliente.setEstado(nuevoEstado);
             clienteRepository.save(cliente);
+
+            // Registrar en auditoría
+            String nombreCompleto = cliente.getNombres() + " " + cliente.getApellidos();
+            auditoriaService.registrarCambiarEstado("CLIENTE", id, nombreCompleto,
+                    estadoAnterior, nuevoEstado);
 
             redirectAttributes.addFlashAttribute("mensaje",
                     "Cliente " + (nuevoEstado.equals("activo") ? "activado" : "desactivado") + " exitosamente");

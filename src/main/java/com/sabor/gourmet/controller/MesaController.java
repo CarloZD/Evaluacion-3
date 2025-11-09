@@ -4,11 +4,14 @@ import com.sabor.gourmet.model.Mesa;
 import com.sabor.gourmet.model.Cliente;
 import com.sabor.gourmet.repository.MesaRepository;
 import com.sabor.gourmet.repository.ClienteRepository;
+import com.sabor.gourmet.services.AuditoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/mesas")
@@ -20,10 +23,17 @@ public class MesaController {
     @Autowired
     private ClienteRepository clienteRepository;
 
+    @Autowired
+    private AuditoriaService auditoriaService;
+
     @GetMapping
     public String listarMesas(Model model) {
-        model.addAttribute("mesas", mesaRepository.findAll());
+        List<Mesa> mesas = mesaRepository.findAll();
+        model.addAttribute("mesas", mesas);
         model.addAttribute("title", "Gestión de Mesas");
+
+        // Registrar listado
+        auditoriaService.registrarListar("MESA", mesas.size());
 
         // Estadísticas
         long totalMesas = mesaRepository.count();
@@ -49,8 +59,21 @@ public class MesaController {
     @PostMapping("/guardar")
     public String guardarMesa(@ModelAttribute Mesa mesa, RedirectAttributes redirectAttributes) {
         try {
-            mesaRepository.save(mesa);
-            redirectAttributes.addFlashAttribute("mensaje", "Mesa guardada exitosamente");
+            boolean esNueva = (mesa.getId() == null);
+
+            Mesa mesaGuardada = mesaRepository.save(mesa);
+
+            // Registrar en auditoría
+            if (esNueva) {
+                auditoriaService.registrarCrear("MESA", mesaGuardada.getId(),
+                        "Mesa " + mesaGuardada.getNumero());
+                redirectAttributes.addFlashAttribute("mensaje", "Mesa creada exitosamente");
+            } else {
+                auditoriaService.registrarEditar("MESA", mesaGuardada.getId(),
+                        "Mesa " + mesaGuardada.getNumero());
+                redirectAttributes.addFlashAttribute("mensaje", "Mesa actualizada exitosamente");
+            }
+
             redirectAttributes.addFlashAttribute("tipoMensaje", "success");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("mensaje", "Error al guardar la mesa: " + e.getMessage());
@@ -78,7 +101,12 @@ public class MesaController {
                 redirectAttributes.addFlashAttribute("mensaje", "No se puede eliminar una mesa ocupada");
                 redirectAttributes.addFlashAttribute("tipoMensaje", "warning");
             } else {
+                String mesaNumero = mesa.getNumero();
                 mesaRepository.deleteById(id);
+
+                // Registrar en auditoría
+                auditoriaService.registrarEliminar("MESA", id, "Mesa " + mesaNumero);
+
                 redirectAttributes.addFlashAttribute("mensaje", "Mesa eliminada exitosamente");
                 redirectAttributes.addFlashAttribute("tipoMensaje", "success");
             }
@@ -128,8 +156,13 @@ public class MesaController {
             mesa.ocupar(cliente, numeroPersonas);
             mesaRepository.save(mesa);
 
+            // Registrar en auditoría
+            String clienteNombre = cliente.getNombres() + " " + cliente.getApellidos();
+            auditoriaService.registrarAsignar(mesa.getId(), mesa.getNumero(),
+                    cliente.getId(), clienteNombre);
+
             redirectAttributes.addFlashAttribute("mensaje",
-                    "Mesa asignada exitosamente a " + cliente.getNombres() + " " + cliente.getApellidos());
+                    "Mesa asignada exitosamente a " + clienteNombre);
             redirectAttributes.addFlashAttribute("tipoMensaje", "success");
 
         } catch (Exception e) {
@@ -145,6 +178,9 @@ public class MesaController {
         try {
             Mesa mesa = mesaRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Mesa no encontrada: " + id));
+
+            // Registrar en auditoría antes de liberar
+            auditoriaService.registrarLiberar(mesa.getId(), mesa.getNumero());
 
             mesa.liberar();
             mesaRepository.save(mesa);
@@ -168,8 +204,13 @@ public class MesaController {
             Mesa mesa = mesaRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Mesa no encontrada: " + id));
 
+            String estadoAnterior = mesa.getEstado();
             mesa.setEstado(estado);
             mesaRepository.save(mesa);
+
+            // Registrar en auditoría
+            auditoriaService.registrarCambiarEstado("MESA", id, "Mesa " + mesa.getNumero(),
+                    estadoAnterior, estado);
 
             redirectAttributes.addFlashAttribute("mensaje", "Estado actualizado correctamente");
             redirectAttributes.addFlashAttribute("tipoMensaje", "success");
