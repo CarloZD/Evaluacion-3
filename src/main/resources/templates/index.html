@@ -2,22 +2,111 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Inicio - Sabor Gourmet</title>
+    <title>Dashboard - Sabor Gourmet</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        .dashboard-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 1rem;
+        }
+        .welcome-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
 </head>
-<body class="bg-light text-center p-5">
+<body>
 <div class="container">
-    <h1 class="fw-bold mb-3">Bienvenido al Sistema de Gestión <br> Sabor Gourmet</h1>
-    <p class="mb-4">Administra clientes, mesas, pedidos y más desde un solo lugar.</p>
-
-    <div class="d-flex justify-content-center gap-3">
-        <a href="/clientes" class="btn btn-primary btn-lg">
-             Gestión de Clientes
-        </a>
-        <a href="/mesas" class="btn btn-success btn-lg">
-             Gestión de Mesas
-        </a>
+    <!-- Tarjeta de Bienvenida -->
+    <div class="welcome-card">
+        <div class="text-center">
+            <h1 class="fw-bold mb-3">
+                <i class="bi bi-shop text-primary"></i>
+                Sistema de Gestión - Sabor Gourmet
+            </h1>
+            <p class="lead text-muted mb-0">
+                Administra tu restaurante de forma eficiente y profesional
+            </p>
+        </div>
     </div>
-</div>
+
+    <!-- Módulos Principales -->
+    <div class="row g-4 mb-4">
+        <!-- Gestión de Clientes -->
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-box bg-primary bg-opacity-10">
+                        <i class="bi bi-people-fill text-primary"></i>
+                    </div>
+                    <h3 class="fw-bold mb-3">Gestión de Clientes</h3>
+                    <p class="text-muted mb-4">
+                        Administra la base de datos de tus clientes, registra nuevos clientes
+                        y mantén actualizada su información.
+                    </p>
+                    <a href="/clientes" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-arrow-right-circle"></i> Ir a Clientes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestión de Mesas -->
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-box bg-success bg-opacity-10">
+                        <i class="bi bi-table text-success"></i>
+                    </div>
+                    <h3 class="fw-bold mb-3">Gestión de Mesas</h3>
+                    <p class="text-muted mb-4">
+                        Controla el estado de tus mesas, asigna clientes y optimiza
+                        la distribución del espacio en tu restaurante.
+                    </p>
+                    <a href="/mesas" class="btn btn-success btn-lg w-100">
+                        <i class="bi bi-arrow-right-circle"></i> Ir a Mesas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

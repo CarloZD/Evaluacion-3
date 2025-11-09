@@ -2,42 +2,249 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Clientes</title>
+    <title>Gestión de Clientes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .stat-card {
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .stat-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        .search-box input {
+            padding-left: 45px;
+        }
+    </style>
 </head>
 <body class="bg-light">
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Lista de Clientes</h2>
+<div class="container-fluid mt-4">
 
-    <div class="mb-3 text-end">
-        <a th:href="@{/clientes/nuevo}" class="btn btn-success">Nuevo Cliente</a>
-        <a th:href="@{/templates/mesas}" class="btn btn-outline-primary">Ver Mesas</a>
+    <!-- Mensajes Flash -->
+    <div th:if="${mensaje}"
+         th:class="'alert alert-' + ${tipoMensaje} + ' alert-dismissible fade show'"
+         role="alert">
+        <span th:text="${mensaje}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Teléfono</th>
-            <th>Email</th>
-            <th>Acciones</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="cliente : ${clientes}">
-            <td th:text="${cliente.id}"></td>
-            <td th:text="${cliente.nombre}"></td>
-            <td th:text="${cliente.telefono}"></td>
-            <td th:text="${cliente.email}"></td>
-            <td>
-                <a th:href="@{/clientes/editar/{id}(id=${cliente.id})}" class="btn btn-warning btn-sm">Editar</a>
-                <a th:href="@{/clientes/eliminar/{id}(id=${cliente.id})}" class="btn btn-danger btn-sm"
-                   onclick="return confirm('¿Estás seguro de eliminar este cliente?')">Eliminar</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people-fill"></i> Gestión de Clientes</h2>
+        <div class="btn-group">
+            <a th:href="@{/}" class="btn btn-outline-secondary">
+                <i class="bi bi-house"></i> Inicio
+            </a>
+            <a th:href="@{/clientes/nuevo}" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Nuevo Cliente
+            </a>
+            <a th:href="@{/mesas}" class="btn btn-outline-success">
+                <i class="bi bi-table"></i> Ver Mesas
+            </a>
+        </div>
+    </div>
+
+    <!-- Dashboard de Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Clientes</h6>
+                            <h2 class="mb-0" th:text="${totalClientes}">0</h2>
+                        </div>
+                        <i class="bi bi-people stat-icon text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Clientes Activos</h6>
+                            <h2 class="mb-0" th:text="${clientesActivos}">0</h2>
+                        </div>
+                        <i class="bi bi-person-check stat-icon text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card border-secondary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Clientes Inactivos</h6>
+                            <h2 class="mb-0" th:text="${clientesInactivos}">0</h2>
+                        </div>
+                        <i class="bi bi-person-x stat-icon text-secondary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Búsqueda y Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form th:action="@{/clientes}" method="get" class="row g-3">
+                <div class="col-md-6">
+                    <div class="search-box">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text"
+                               name="busqueda"
+                               class="form-control form-control-lg"
+                               placeholder="Buscar por nombre, apellido o DNI..."
+                               th:value="${busqueda}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="estado" class="form-select form-select-lg">
+                        <option value="">Todos los estados</option>
+                        <option value="activo" th:selected="${estadoFiltro == 'activo'}">Activos</option>
+                        <option value="inactivo" th:selected="${estadoFiltro == 'inactivo'}">Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-funnel"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Clientes -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>DNI</th>
+                        <th>Nombres</th>
+                        <th>Apellidos</th>
+                        <th>Teléfono</th>
+                        <th>Correo</th>
+                        <th>Estado</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="cliente : ${clientes}">
+                        <td>
+                            <i class="bi bi-credit-card text-muted"></i>
+                            <strong th:text="${cliente.dni}"></strong>
+                        </td>
+                        <td th:text="${cliente.nombres}"></td>
+                        <td th:text="${cliente.apellidos}"></td>
+                        <td>
+                                <span th:if="${cliente.telefono != null and !cliente.telefono.isEmpty()}">
+                                    <i class="bi bi-telephone"></i>
+                                    <span th:text="${cliente.telefono}"></span>
+                                </span>
+                            <span th:if="${cliente.telefono == null or cliente.telefono.isEmpty()}"
+                                  class="text-muted">-</span>
+                        </td>
+                        <td>
+                                <span th:if="${cliente.correo != null and !cliente.correo.isEmpty()}">
+                                    <i class="bi bi-envelope"></i>
+                                    <span th:text="${cliente.correo}"></span>
+                                </span>
+                            <span th:if="${cliente.correo == null or cliente.correo.isEmpty()}"
+                                  class="text-muted">-</span>
+                        </td>
+                        <td>
+                                <span th:if="${cliente.estado == 'activo'}"
+                                      class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Activo
+                                </span>
+                            <span th:if="${cliente.estado == 'inactivo'}"
+                                  class="badge bg-secondary">
+                                    <i class="bi bi-x-circle"></i> Inactivo
+                                </span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <!-- Ver Detalle -->
+                                <a th:href="@{/clientes/ver/{id}(id=${cliente.id})}"
+                                   class="btn btn-info"
+                                   title="Ver Detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                <!-- Editar -->
+                                <a th:href="@{/clientes/editar/{id}(id=${cliente.id})}"
+                                   class="btn btn-primary"
+                                   title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <!-- Cambiar Estado -->
+                                <a th:href="@{/clientes/cambiar-estado/{id}(id=${cliente.id})}"
+                                   th:class="${cliente.estado == 'activo' ? 'btn btn-warning' : 'btn btn-success'}"
+                                   th:title="${cliente.estado == 'activo' ? 'Desactivar' : 'Activar'}">
+                                    <i th:class="${cliente.estado == 'activo' ? 'bi bi-toggle-off' : 'bi bi-toggle-on'}"></i>
+                                </a>
+
+                                <!-- Eliminar -->
+                                <a th:href="@{/clientes/eliminar/{id}(id=${cliente.id})}"
+                                   class="btn btn-danger"
+                                   title="Eliminar"
+                                   onclick="return confirm('¿Está seguro de eliminar este cliente?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mensaje si no hay clientes -->
+            <div th:if="${#lists.isEmpty(clientes)}" class="alert alert-info text-center mt-3">
+                <i class="bi bi-info-circle"></i>
+                <span th:if="${busqueda != null}">
+                    No se encontraron clientes con el criterio de búsqueda "<strong th:text="${busqueda}"></strong>".
+                </span>
+                <span th:if="${busqueda == null}">
+                    No hay clientes registrados.
+                    <a th:href="@{/clientes/nuevo}" class="alert-link">Registrar el primero</a>
+                </span>
+            </div>
+
+            <!-- Información de resultados -->
+            <div th:if="${!#lists.isEmpty(clientes)}" class="mt-3">
+                <p class="text-muted text-center">
+                    <i class="bi bi-info-circle"></i>
+                    Mostrando <strong th:text="${#lists.size(clientes)}"></strong> cliente(s)
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

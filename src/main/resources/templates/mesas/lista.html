@@ -2,42 +2,220 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Mesas</title>
+    <title>Gestión de Mesas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .stat-card {
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .stat-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body class="bg-light">
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Lista de Mesas</h2>
+<div class="container-fluid mt-4">
 
-    <div class="mb-3 text-end">
-        <a th:href="@{/mesas/nuevo}" class="btn btn-success">Nueva Mesa</a>
-        <a th:href="@{/templates/clientes}" class="btn btn-outline-primary">Ver Clientes</a>
+    <!-- Mensajes Flash -->
+    <div th:if="${mensaje}"
+         th:class="'alert alert-' + ${tipoMensaje} + ' alert-dismissible fade show'"
+         role="alert">
+        <span th:text="${mensaje}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Número</th>
-            <th>Capacidad</th>
-            <th>Ubicación</th>
-            <th>Acciones</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="mesa : ${mesas}">
-            <td th:text="${mesa.id}"></td>
-            <td th:text="${mesa.numero}"></td>
-            <td th:text="${mesa.capacidad}"></td>
-            <td th:text="${mesa.ubicacion}"></td>
-            <td>
-                <a th:href="@{/mesas/editar/{id}(id=${mesa.id})}" class="btn btn-warning btn-sm">Editar</a>
-                <a th:href="@{/mesas/eliminar/{id}(id=${mesa.id})}" class="btn btn-danger btn-sm"
-                   onclick="return confirm('¿Estás seguro de eliminar esta mesa?')">Eliminar</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-table"></i> Gestión de Mesas</h2>
+        <div class="btn-group">
+            <a th:href="@{/}" class="btn btn-outline-secondary">
+                <i class="bi bi-house"></i> Inicio
+            </a>
+            <a th:href="@{/mesas/nueva}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Nueva Mesa
+            </a>
+            <a th:href="@{/clientes}" class="btn btn-outline-primary">
+                <i class="bi bi-people"></i> Ver Clientes
+            </a>
+        </div>
+    </div>
+
+    <!-- Dashboard de Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Mesas</h6>
+                            <h2 class="mb-0" th:text="${totalMesas}">0</h2>
+                        </div>
+                        <i class="bi bi-table stat-icon text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Disponibles</h6>
+                            <h2 class="mb-0" th:text="${mesasDisponibles}">0</h2>
+                        </div>
+                        <i class="bi bi-check-circle stat-icon text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Ocupadas</h6>
+                            <h2 class="mb-0" th:text="${mesasOcupadas}">0</h2>
+                        </div>
+                        <i class="bi bi-person-fill stat-icon text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Reservadas</h6>
+                            <h2 class="mb-0" th:text="${mesasReservadas}">0</h2>
+                        </div>
+                        <i class="bi bi-bookmark-fill stat-icon text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Mesas -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Número</th>
+                        <th>Capacidad</th>
+                        <th>Estado</th>
+                        <th>Cliente Asignado</th>
+                        <th>Personas</th>
+                        <th>Hora Ocupación</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="mesa : ${mesas}">
+                        <td>
+                            <strong th:text="${mesa.numero}"></strong>
+                        </td>
+                        <td>
+                            <i class="bi bi-people"></i>
+                            <span th:text="${mesa.capacidad}"></span>
+                        </td>
+                        <td>
+                                <span th:if="${mesa.estado == 'disponible'}"
+                                      class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Disponible
+                                </span>
+                            <span th:if="${mesa.estado == 'ocupada'}"
+                                  class="badge bg-danger">
+                                    <i class="bi bi-person-fill"></i> Ocupada
+                                </span>
+                            <span th:if="${mesa.estado == 'reservada'}"
+                                  class="badge bg-warning text-dark">
+                                    <i class="bi bi-bookmark-fill"></i> Reservada
+                                </span>
+                            <span th:if="${mesa.estado == 'mantenimiento'}"
+                                  class="badge bg-secondary">
+                                    <i class="bi bi-tools"></i> Mantenimiento
+                                </span>
+                        </td>
+                        <td>
+                                <span th:if="${mesa.clienteAsignado != null}">
+                                    <i class="bi bi-person-badge"></i>
+                                    <span th:text="${mesa.clienteAsignado.nombres + ' ' + mesa.clienteAsignado.apellidos}"></span>
+                                    <br>
+                                    <small class="text-muted" th:text="'DNI: ' + ${mesa.clienteAsignado.dni}"></small>
+                                </span>
+                            <span th:if="${mesa.clienteAsignado == null}" class="text-muted">
+                                    <i class="bi bi-dash"></i> Sin asignar
+                                </span>
+                        </td>
+                        <td>
+                            <span th:if="${mesa.numeroPersonas != null}" th:text="${mesa.numeroPersonas}"></span>
+                            <span th:if="${mesa.numeroPersonas == null}" class="text-muted">-</span>
+                        </td>
+                        <td>
+                                <span th:if="${mesa.fechaOcupacion != null}"
+                                      th:text="${#temporals.format(mesa.fechaOcupacion, 'HH:mm')}"></span>
+                            <span th:if="${mesa.fechaOcupacion == null}" class="text-muted">-</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <!-- Asignar Cliente (solo si está disponible) -->
+                                <a th:if="${mesa.estado == 'disponible'}"
+                                   th:href="@{/mesas/asignar/{id}(id=${mesa.id})}"
+                                   class="btn btn-success"
+                                   title="Asignar Cliente">
+                                    <i class="bi bi-person-plus"></i>
+                                </a>
+
+                                <!-- Liberar Mesa (solo si está ocupada) -->
+                                <a th:if="${mesa.estado == 'ocupada'}"
+                                   th:href="@{/mesas/liberar/{id}(id=${mesa.id})}"
+                                   class="btn btn-warning"
+                                   title="Liberar Mesa"
+                                   onclick="return confirm('¿Liberar esta mesa?')">
+                                    <i class="bi bi-unlock"></i>
+                                </a>
+
+                                <!-- Editar -->
+                                <a th:href="@{/mesas/editar/{id}(id=${mesa.id})}"
+                                   class="btn btn-primary"
+                                   title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <!-- Eliminar -->
+                                <a th:href="@{/mesas/eliminar/{id}(id=${mesa.id})}"
+                                   class="btn btn-danger"
+                                   title="Eliminar"
+                                   onclick="return confirm('¿Está seguro de eliminar esta mesa?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mensaje si no hay mesas -->
+            <div th:if="${#lists.isEmpty(mesas)}" class="alert alert-info text-center mt-3">
+                <i class="bi bi-info-circle"></i>
+                No hay mesas registradas.
+                <a th:href="@{/mesas/nueva}" class="alert-link">Crear la primera mesa</a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
