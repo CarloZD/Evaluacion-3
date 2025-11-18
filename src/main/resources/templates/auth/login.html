@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Sabor Gourmet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+        }
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+        .login-header i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .form-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        .input-with-icon {
+            padding-left: 45px;
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card login-card">
+                <!-- Header -->
+                <div class="login-header">
+                    <i class="bi bi-shop"></i>
+                    <h2 class="mb-0">Sabor Gourmet</h2>
+                    <p class="mb-0">Sistema de Gestión</p>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body p-4">
+                    <!-- Mensajes -->
+                    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Usuario o contraseña incorrectos
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <div th:if="${param.logout}" class="alert alert-success alert-dismissible fade show">
+                        <i class="bi bi-check-circle"></i>
+                        Ha cerrado sesión exitosamente
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <!-- Formulario de Login -->
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-person"></i> Usuario
+                            </label>
+                            <div class="position-relative">
+                                <i class="bi bi-person-circle form-icon"></i>
+                                <input type="text"
+                                       name="username"
+                                       class="form-control form-control-lg input-with-icon"
+                                       placeholder="Ingrese su usuario"
+                                       required
+                                       autofocus>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-lock"></i> Contraseña
+                            </label>
+                            <div class="position-relative">
+                                <i class="bi bi-key-fill form-icon"></i>
+                                <input type="password"
+                                       name="password"
+                                       class="form-control form-control-lg input-with-icon"
+                                       placeholder="Ingrese su contraseña"
+                                       required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-login btn-lg w-100 text-white mb-3">
+                            <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                        </button>
+                    </form>
+
+                    <!-- Enlaces adicionales -->
+                    <div class="text-center">
+                        <p class="text-muted mb-2">¿No tienes una cuenta?</p>
+                        <a th:href="@{/registro}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-plus"></i> Crear Cuenta
+                        </a>
+                    </div>
+                </div>
+
+            <!-- Información de usuarios de prueba -->
+            <div class="card mt-3 bg-white bg-opacity-75">
+                <div class="card-body text-center">
+                    <h6 class="mb-2"><i class="bi bi-info-circle"></i> Usuarios de Prueba</h6>
+                    <small class="d-block text-muted">
+                        <strong>Admin:</strong> admin / admin123<br>
+                        <strong>Usuario:</strong> user / user123
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
