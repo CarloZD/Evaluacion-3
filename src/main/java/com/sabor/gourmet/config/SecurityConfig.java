@@ -21,7 +21,7 @@ public class SecurityConfig {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
-    @Bean  // ← ESTE BEAN ES CRÍTICO
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -34,7 +34,41 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // ... configuración ...
+        http
+                .authorizeHttpRequests(authz -> authz
+                        // Rutas públicas
+                        .requestMatchers("/login", "/registro", "/css/**", "/js/**", "/images/**").permitAll()
+
+                        // Rutas para ADMIN
+                        .requestMatchers("/auditoria/**").hasRole("ADMIN")
+                        .requestMatchers("/clientes/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/mesas/**").hasAnyRole("ADMIN", "USER")
+
+                        // Cualquier otra ruta requiere autenticación
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/", true) // Redirige a / después del login
+                        .failureUrl("/login?error=true")
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout=true")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
+                )
+                .exceptionHandling(ex -> ex
+                        .accessDeniedPage("/acceso-denegado")
+                )
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**")) // Si usas H2 para pruebas
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.sameOrigin()) // Para H2 Console si lo usas
+                );
+
         return http.build();
     }
 }
