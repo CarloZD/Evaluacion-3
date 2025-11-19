@@ -65,16 +65,20 @@
                 <i class="bi bi-shop text-primary"></i> Sabor Gourmet
             </a>
             <div class="ms-auto d-flex align-items-center gap-3">
-                    <span sec:authorize="isAuthenticated()" class="user-badge bg-light">
-                        <i class="bi bi-person-circle"></i>
-                        <span sec:authentication="name"></span>
-                        <span sec:authorize="hasRole('ADMIN')" class="badge bg-danger ms-2">ADMIN</span>
-                        <span sec:authorize="hasRole('USER')" class="badge bg-info ms-2">USER</span>
-                    </span>
-                <a th:href="@{/logout}" class="btn btn-outline-danger"
-                   sec:authorize="isAuthenticated()">
-                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                </a>
+                <span sec:authorize="isAuthenticated()" class="user-badge bg-light">
+                    <i class="bi bi-person-circle"></i>
+                    <span sec:authentication="name"></span>
+                    <span sec:authorize="hasRole('ADMIN')" class="badge bg-danger ms-2">ADMIN</span>
+                    <span sec:authorize="hasRole('USER')" class="badge bg-info ms-2">USER</span>
+                </span>
+
+                <!-- LOGOUT CON FORMULARIO (CORREGIDO) -->
+                <form th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </button>
+                </form>
+
                 <a th:href="@{/login}" class="btn btn-primary"
                    sec:authorize="!isAuthenticated()">
                     <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
@@ -140,7 +144,7 @@
 
         <!-- Módulo de Auditoría -->
         <div class="row g-4 mb-4">
-            <div class="col-12">
+            <div class="col-md-6">
                 <div class="card dashboard-card">
                     <div class="card-body text-center p-4">
                         <div class="icon-box bg-warning bg-opacity-10">
@@ -148,8 +152,23 @@
                         </div>
                         <h3 class="fw-bold mb-3">Auditoría del Sistema</h3>
                         <p class="text-muted">Historial de acciones del sistema</p>
-                        <a href="/auditoria" class="btn btn-warning btn-lg">
+                        <a href="/auditoria" class="btn btn-warning btn-lg w-100">
                             <i class="bi bi-arrow-right-circle"></i> Ver Auditoría
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center p-4">
+                        <div class="icon-box bg-info bg-opacity-10">
+                            <i class="bi bi-clipboard-check text-info"></i>
+                        </div>
+                        <h3 class="fw-bold mb-3">Solicitudes de Reserva</h3>
+                        <p class="text-muted">Aprobar o rechazar solicitudes</p>
+                        <a href="/solicitudes/admin" class="btn btn-info btn-lg w-100">
+                            <i class="bi bi-arrow-right-circle"></i> Ver Solicitudes
                         </a>
                     </div>
                 </div>
@@ -157,36 +176,41 @@
         </div>
     </div>
 
-    <!-- Módulos para USER -->
+    <!-- Módulos para USER (SOLO LECTURA) -->
     <div sec:authorize="hasRole('USER') and !hasRole('ADMIN')">
         <div class="row g-4 mb-4">
             <!-- Ver Mesas Disponibles -->
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="card dashboard-card">
                     <div class="card-body text-center p-4">
                         <div class="icon-box bg-success bg-opacity-10">
                             <i class="bi bi-table text-success"></i>
                         </div>
                         <h3 class="fw-bold mb-3">Ver Mesas Disponibles</h3>
-                        <p class="text-muted">Consulta las mesas disponibles y realiza reservas</p>
-                        <a href="/mesas" class="btn btn-success btn-lg">
+                        <p class="text-muted">Consulta las mesas disponibles y solicita reservas</p>
+                        <a href="/mesas" class="btn btn-success btn-lg w-100">
                             <i class="bi bi-arrow-right-circle"></i> Ver Mesas
                         </a>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Información para usuarios -->
-        <div class="alert alert-info">
-            <h5><i class="bi bi-info-circle"></i> Información</h5>
-            <ul class="mb-0">
-                <li>Puedes consultar las mesas disponibles</li>
-                <li>Solicitar asignación de mesas</li>
-                <li>Ver el estado de tus reservas</li>
-            </ul>
+            <!-- Mis Solicitudes -->
+            <div class="col-md-6">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center p-4">
+                        <div class="icon-box bg-primary bg-opacity-10">
+                            <i class="bi bi-calendar-check text-primary"></i>
+                        </div>
+                        <h3 class="fw-bold mb-3">Mis Solicitudes</h3>
+                        <p class="text-muted">Revisa el estado de tus solicitudes</p>
+                        <a href="/solicitudes/mis-solicitudes" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-arrow-right-circle"></i> Ver Solicitudes
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
 
     <!-- Mensaje para usuarios no autenticados -->
     <div sec:authorize="!isAuthenticated()">

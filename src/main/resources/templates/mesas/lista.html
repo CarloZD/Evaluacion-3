@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Mesas</title>
@@ -17,6 +18,23 @@
         .stat-icon {
             font-size: 2.5rem;
             opacity: 0.8;
+        }
+        .mesa-card {
+            border: 2px solid;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .mesa-card.disponible {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #f0fff4 100%);
+        }
+        .mesa-card.ocupada {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #fff5f5 100%);
+        }
+        .mesa-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
     </style>
 </head>
@@ -38,12 +56,20 @@
             <a th:href="@{/}" class="btn btn-outline-secondary">
                 <i class="bi bi-house"></i> Inicio
             </a>
-            <a th:href="@{/mesas/nueva}" class="btn btn-success">
+            <!-- BOTÓN NUEVA MESA - SOLO ADMIN -->
+            <a th:href="@{/mesas/nueva}" class="btn btn-success" sec:authorize="hasRole('ADMIN')">
                 <i class="bi bi-plus-circle"></i> Nueva Mesa
             </a>
-            <a th:href="@{/clientes}" class="btn btn-outline-primary">
+            <!-- BOTÓN VER CLIENTES - SOLO ADMIN -->
+            <a th:href="@{/clientes}" class="btn btn-outline-primary" sec:authorize="hasRole('ADMIN')">
                 <i class="bi bi-people"></i> Ver Clientes
             </a>
+            <!-- LOGOUT -->
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-box-arrow-right"></i> Salir
+                </button>
+            </form>
         </div>
     </div>
 
@@ -103,8 +129,50 @@
         </div>
     </div>
 
-    <!-- Tabla de Mesas -->
-    <div class="card shadow">
+    <!-- VISTA DE TARJETAS PARA USUARIOS (SOLO MESAS DISPONIBLES) -->
+    <div sec:authorize="hasRole('USER') and !hasRole('ADMIN')">
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h4 class="mb-4">
+                    <i class="bi bi-table"></i> Mesas Disponibles para Solicitar
+                </h4>
+
+                <div class="row g-3">
+                    <div class="col-md-4" th:each="mesa : ${mesas}" th:if="${mesa.estado == 'disponible'}">
+                        <div class="card mesa-card disponible">
+                            <div class="card-body text-center">
+                                <h2 class="text-success mb-3">
+                                    <i class="bi bi-table"></i>
+                                </h2>
+                                <h4 class="fw-bold" th:text="${mesa.numero}">Mesa 1</h4>
+                                <p class="mb-2">
+                                    <i class="bi bi-people"></i>
+                                    Capacidad: <strong th:text="${mesa.capacidad}">4</strong> personas
+                                </p>
+                                <span class="badge bg-success mb-3">
+                                    <i class="bi bi-check-circle"></i> Disponible
+                                </span>
+                                <div class="d-grid">
+                                    <a th:href="@{/solicitudes/nueva/{id}(id=${mesa.id})}"
+                                       class="btn btn-success">
+                                        <i class="bi bi-send"></i> Solicitar Mesa
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(mesas)}" class="alert alert-info text-center mt-3">
+                    <i class="bi bi-info-circle"></i>
+                    No hay mesas disponibles en este momento.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA COMPLETA PARA ADMINISTRADORES -->
+    <div sec:authorize="hasRole('ADMIN')" class="card shadow">
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -129,41 +197,41 @@
                             <span th:text="${mesa.capacidad}"></span>
                         </td>
                         <td>
-                                <span th:if="${mesa.estado == 'disponible'}"
-                                      class="badge bg-success">
-                                    <i class="bi bi-check-circle"></i> Disponible
-                                </span>
+                            <span th:if="${mesa.estado == 'disponible'}"
+                                  class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> Disponible
+                            </span>
                             <span th:if="${mesa.estado == 'ocupada'}"
                                   class="badge bg-danger">
-                                    <i class="bi bi-person-fill"></i> Ocupada
-                                </span>
+                                <i class="bi bi-person-fill"></i> Ocupada
+                            </span>
                             <span th:if="${mesa.estado == 'reservada'}"
                                   class="badge bg-warning text-dark">
-                                    <i class="bi bi-bookmark-fill"></i> Reservada
-                                </span>
+                                <i class="bi bi-bookmark-fill"></i> Reservada
+                            </span>
                             <span th:if="${mesa.estado == 'mantenimiento'}"
                                   class="badge bg-secondary">
-                                    <i class="bi bi-tools"></i> Mantenimiento
-                                </span>
+                                <i class="bi bi-tools"></i> Mantenimiento
+                            </span>
                         </td>
                         <td>
-                                <span th:if="${mesa.clienteAsignado != null}">
-                                    <i class="bi bi-person-badge"></i>
-                                    <span th:text="${mesa.clienteAsignado.nombres + ' ' + mesa.clienteAsignado.apellidos}"></span>
-                                    <br>
-                                    <small class="text-muted" th:text="'DNI: ' + ${mesa.clienteAsignado.dni}"></small>
-                                </span>
+                            <span th:if="${mesa.clienteAsignado != null}">
+                                <i class="bi bi-person-badge"></i>
+                                <span th:text="${mesa.clienteAsignado.nombres + ' ' + mesa.clienteAsignado.apellidos}"></span>
+                                <br>
+                                <small class="text-muted" th:text="'DNI: ' + ${mesa.clienteAsignado.dni}"></small>
+                            </span>
                             <span th:if="${mesa.clienteAsignado == null}" class="text-muted">
-                                    <i class="bi bi-dash"></i> Sin asignar
-                                </span>
+                                <i class="bi bi-dash"></i> Sin asignar
+                            </span>
                         </td>
                         <td>
                             <span th:if="${mesa.numeroPersonas != null}" th:text="${mesa.numeroPersonas}"></span>
                             <span th:if="${mesa.numeroPersonas == null}" class="text-muted">-</span>
                         </td>
                         <td>
-                                <span th:if="${mesa.fechaOcupacion != null}"
-                                      th:text="${#temporals.format(mesa.fechaOcupacion, 'HH:mm')}"></span>
+                            <span th:if="${mesa.fechaOcupacion != null}"
+                                  th:text="${#temporals.format(mesa.fechaOcupacion, 'HH:mm')}"></span>
                             <span th:if="${mesa.fechaOcupacion == null}" class="text-muted">-</span>
                         </td>
                         <td>

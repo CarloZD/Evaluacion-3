@@ -4,6 +4,8 @@ import com.sabor.gourmet.model.Auditoria;
 import com.sabor.gourmet.repository.AuditoriaRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -115,13 +117,25 @@ public class AuditoriaService {
     }
 
     /**
-     * Obtiene el usuario actual (por ahora retorna "Sistema")
-     * TODO: Integrar con Spring Security cuando se implemente login
+     * Obtiene el usuario actual desde Spring Security
      */
     private String obtenerUsuarioActual() {
-        // Aquí se integrará con Spring Security cuando tengas login
-        // Por ahora retorna "Sistema"
-        return "Sistema";
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication != null && authentication.isAuthenticated()) {
+                String username = authentication.getName();
+                // Si el username no es "anonymousUser", retornarlo
+                if (!"anonymousUser".equals(username)) {
+                    return username;
+                }
+            }
+
+            return "Sistema";
+        } catch (Exception e) {
+            System.err.println("Error al obtener usuario: " + e.getMessage());
+            return "Sistema";
+        }
     }
 
     /**

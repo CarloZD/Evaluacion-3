@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nueva Solicitud de Reserva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px 15px 0 0;
+        }
+        .info-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <!-- Header -->
+                <div class="form-header">
+                    <h2 class="text-center mb-0">
+                        <i class="bi bi-calendar-check"></i>
+                        Nueva Solicitud de Reserva
+                    </h2>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Información de la Mesa -->
+                    <div class="card info-card mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-3">
+                                <i class="bi bi-info-circle text-primary"></i>
+                                Información de la Mesa
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <strong>Mesa:</strong>
+                                        <span th:text="${mesa.numero}"></span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <strong>Capacidad:</strong>
+                                        <span th:text="${mesa.capacidad} + ' personas'"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario -->
+                    <form th:action="@{/solicitudes/crear}" method="post">
+                        <input type="hidden" name="mesaId" th:value="${mesa.id}"/>
+
+                        <!-- Cliente -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-person"></i> Cliente *
+                            </label>
+                            <select name="clienteId" class="form-select form-select-lg" required>
+                                <option value="">-- Seleccione un cliente --</option>
+                                <option th:each="cliente : ${clientes}"
+                                        th:value="${cliente.id}"
+                                        th:text="${cliente.dni + ' - ' + cliente.nombres + ' ' + cliente.apellidos}">
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                <i class="bi bi-lightbulb"></i>
+                                ¿Cliente no registrado?
+                                <a th:href="@{/clientes/nuevo}" target="_blank">Crear nuevo cliente</a>
+                            </div>
+                        </div>
+
+                        <!-- Número de Personas -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-people"></i> Número de Personas *
+                            </label>
+                            <input type="number"
+                                   name="numeroPersonas"
+                                   class="form-control form-control-lg"
+                                   min="1"
+                                   th:max="${mesa.capacidad}"
+                                   placeholder="¿Cuántas personas?"
+                                   required>
+                            <div class="form-text">
+                                Capacidad máxima: <span th:text="${mesa.capacidad}"></span> personas
+                            </div>
+                        </div>
+
+                        <!-- Motivo/Observaciones -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-chat-left-text"></i> Motivo de la Reserva (Opcional)
+                            </label>
+                            <textarea name="motivo"
+                                      class="form-control"
+                                      rows="3"
+                                      placeholder="Ej: Reunión de negocios, celebración, etc."></textarea>
+                            <div class="form-text">
+                                Esto ayudará al administrador a priorizar tu solicitud
+                            </div>
+                        </div>
+
+                        <!-- Nota informativa -->
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Nota:</strong> Tu solicitud será revisada por un administrador.
+                            Recibirás una respuesta pronto.
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a th:href="@{/mesas}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send"></i> Enviar Solicitud
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

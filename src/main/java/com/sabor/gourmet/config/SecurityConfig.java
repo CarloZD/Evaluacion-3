@@ -39,10 +39,19 @@ public class SecurityConfig {
                         // Rutas públicas
                         .requestMatchers("/login", "/registro", "/css/**", "/js/**", "/images/**").permitAll()
 
-                        // Rutas para ADMIN
+                        // Rutas solo para ADMIN
                         .requestMatchers("/auditoria/**").hasRole("ADMIN")
+                        .requestMatchers("/solicitudes/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/solicitudes/aprobar/**").hasRole("ADMIN")
+                        .requestMatchers("/solicitudes/rechazar/**").hasRole("ADMIN")
+
+                        // Rutas para USER y ADMIN
                         .requestMatchers("/clientes/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers("/mesas/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/solicitudes/nueva/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/solicitudes/crear").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/solicitudes/mis-solicitudes").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/solicitudes/cancelar/**").hasAnyRole("ADMIN", "USER")
 
                         // Cualquier otra ruta requiere autenticación
                         .anyRequest().authenticated()
@@ -50,7 +59,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/", true) // Redirige a / después del login
+                        .defaultSuccessUrl("/", true)
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )
@@ -64,9 +73,9 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .accessDeniedPage("/acceso-denegado")
                 )
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**")) // Si usas H2 para pruebas
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.sameOrigin()) // Para H2 Console si lo usas
+                        .frameOptions(frame -> frame.sameOrigin())
                 );
 
         return http.build();
